@@ -1,0 +1,5 @@
+[
+  {"id": 99, "description": "first test", "amount": 123.45, "owner": "sarah1"},
+  {"id": 100, "description": "sec test", "amount": 1.00, "owner": "sarah1"},
+  {"id": 101, "description": "third test", "amount": 150.00, "owner": "sarah1"}
+]
