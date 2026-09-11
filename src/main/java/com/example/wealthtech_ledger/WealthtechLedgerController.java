@@ -6,6 +6,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import org.springframework.data.domain.Pageable;
@@ -19,9 +20,11 @@ import java.math.BigDecimal;
 @RequestMapping("/transactions")
 class WealthtechLedgerController {
 
+    private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
 
-    private WealthtechLedgerController(TransactionRepository transactionRepository) {
+    private WealthtechLedgerController(AccountRepository accountRepository, TransactionRepository transactionRepository) {
+        this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
     }
 
@@ -58,11 +61,19 @@ class WealthtechLedgerController {
 
 
     @PostMapping
-    private ResponseEntity<Void> createTransaction(@RequestBody Transaction newTransactionRequest, UriComponentsBuilder ucb, Principal principal){
+    private ResponseEntity<Void> createTransaction(@RequestBody NewTransactionRequest newTransactionRequest, UriComponentsBuilder ucb, Principal principal){
 
-        Transaction transactionWithOwner = new Transaction(null, "Test", newTransactionRequest.amount(), principal.getName());
-        Transaction savedTransaction = transactionRepository.save(transactionWithOwner);
-        URI locationOfNewTransaction = ucb.path("/transactions/{id}").buildAndExpand(savedTransaction.id()).toUri();
+        Account fromAccount = accountRepository.findById(newTransactionRequest.fromAccountId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"From account not found. " ));
+        Account toAccount = accountRepository.findById(newTransactionRequest.toAccountId()).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,"To account not found. " ));
+
+        if (newTransactionRequest.amount().compareTo(fromAccount.getBalance()) > 0){
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Insufficient funds");
+        }
+        fromAccount.setBalance(fromAccount.getBalance().subtract(newTransactionRequest.amount()));
+        toAccount.setBalance(toAccount.getBalance().add(newTransactionRequest.amount()));
+        Transaction t = new Transaction(newTransactionRequest.description(), newTransactionRequest.amount(), fromAccount, toAccount);
+        Transaction savedTransaction = transactionRepository.save(t);
+        URI locationOfNewTransaction = ucb.path("/transactions/{id}").buildAndExpand(savedTransaction.getId()).toUri();
         return ResponseEntity.created(locationOfNewTransaction).build();
 
     }
