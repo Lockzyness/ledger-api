@@ -2,6 +2,7 @@ package com.example.wealthtech_ledger;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.User;
@@ -18,7 +19,11 @@ class SecurityConfig {
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(request -> request
-                .requestMatchers("/transactions/**").hasRole("OWNER"))
+                        .requestMatchers("/error").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/accounts").permitAll()
+                        .requestMatchers("/accounts/**").hasRole("OWNER")
+                        .requestMatchers("/transactions/**").hasRole("OWNER")
+                        .anyRequest().authenticated())
                 .httpBasic(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable());
         return http.build();
@@ -38,7 +43,7 @@ class SecurityConfig {
                 .roles("NON-OWNER")
                 .build();
         UserDetails kumar = users
-                .username("kumar")
+                .username("kumar2")
                 .password(passwordEncoder.encode("qwe"))
                 .roles("OWNER")
                 .build();

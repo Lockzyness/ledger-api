@@ -9,18 +9,18 @@ import java.math.BigDecimal;
 public class Transaction {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String description;
     private BigDecimal amount;
 
     @ManyToOne
-    @JoinColumn(name = "from_account")
+    @JoinColumn(name = "FROM_ACCOUNT")
     private Account fromAccount;
 
     @ManyToOne
-    @JoinColumn(name = "to_account")
+    @JoinColumn(name = "TO_ACCOUNT")
     private Account toAccount;
 
     protected Transaction(){}

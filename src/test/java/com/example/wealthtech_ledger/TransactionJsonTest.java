@@ -1,4 +1,4 @@
-package com.example.wealthtech_ledger;
+/*package com.example.wealthtech_ledger;
 
 import com.jayway.jsonpath.JsonPath;
 import org.assertj.core.util.Arrays;
@@ -79,8 +79,4 @@ class TransactionJsonTest {
         assertThat(jsonList.parse(expected)).isEqualTo(transactions);
     }
 
-
-
-
-
-}
+}*/

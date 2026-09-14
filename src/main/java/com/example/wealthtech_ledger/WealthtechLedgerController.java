@@ -29,9 +29,9 @@ class WealthtechLedgerController {
     }
 
     @GetMapping("/{requestedId}")
-    private ResponseEntity<Transaction> findById(@PathVariable Long requestedId, Principal principal){
+    public ResponseEntity<Transaction> findById(@PathVariable Long requestedId, Principal principal){
 
-        Optional<Transaction> transactionOptional = Optional.ofNullable(transactionRepository.findByIdAndOwner(requestedId, principal.getName()));
+        Optional<Transaction> transactionOptional = transactionRepository.findByIdAndFromAccountOwnerOrToAccountOwner(requestedId, principal.getName(), principal.getName());
         if (transactionOptional.isPresent()){
             return ResponseEntity.ok(transactionOptional.get());
         }
@@ -50,7 +50,8 @@ class WealthtechLedgerController {
 
     @GetMapping             // return list
     private ResponseEntity<List<Transaction>> findAll(Pageable pageable, Principal principal){
-        Page<Transaction> page = transactionRepository.findByOwner(principal.getName(),
+        Page<Transaction> page = transactionRepository
+                .findByFromAccountOwnerOrToAccountOwner(principal.getName(), principal.getName(),
                 PageRequest.of(
                         pageable.getPageNumber(),
                         pageable.getPageSize(),
@@ -63,11 +64,13 @@ class WealthtechLedgerController {
     @PostMapping
     private ResponseEntity<Void> createTransaction(@RequestBody NewTransactionRequest newTransactionRequest, UriComponentsBuilder ucb, Principal principal){
 
-        Account fromAccount = accountRepository.findById(newTransactionRequest.fromAccountId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"From account not found. " ));
-        Account toAccount = accountRepository.findById(newTransactionRequest.toAccountId()).orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,"To account not found. " ));
+        Account fromAccount = accountRepository.findById(newTransactionRequest.fromAccountId())
+                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,"From account not found."));
+        Account toAccount = accountRepository.findById(newTransactionRequest.toAccountId())
+                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,"To account not found."));
 
         if (newTransactionRequest.amount().compareTo(fromAccount.getBalance()) > 0){
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Insufficient funds");
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Insufficient funds");
         }
         fromAccount.setBalance(fromAccount.getBalance().subtract(newTransactionRequest.amount()));
         toAccount.setBalance(toAccount.getBalance().add(newTransactionRequest.amount()));
@@ -75,13 +78,12 @@ class WealthtechLedgerController {
         Transaction savedTransaction = transactionRepository.save(t);
         URI locationOfNewTransaction = ucb.path("/transactions/{id}").buildAndExpand(savedTransaction.getId()).toUri();
         return ResponseEntity.created(locationOfNewTransaction).build();
-
     }
 
     @DeleteMapping("/{id}")
     private ResponseEntity<Void> deleteTransaction(@PathVariable Long id, Principal principal){
 
-        if(!transactionRepository.existsByIdAndOwner(id, principal.getName())){
+        if(!transactionRepository.existsByIdAndFromAccount_OwnerOrToAccount_Owner(id, principal.getName(), principal.getName())){
             return ResponseEntity.notFound().build();
         }
 
@@ -95,5 +97,4 @@ class WealthtechLedgerController {
         }
         return ResponseEntity.notFound().build();*/
     }
-
 }
