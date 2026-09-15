@@ -28,7 +28,8 @@ A REST API for transferring funds between accounts, built with Spring Boot and J
 
 | Method | Path | Description | Auth required |
 |---|---|---|---|
-| `POST` | `/accounts` | Create a new account | No |
+| `POST` | `/accounts` | Create a new account (also registers a matching login user) | No |
+| `GET` | `/accounts/{id}` | View an account (owner only) | Yes |
 | `POST` | `/transactions` | Create a transfer between two accounts | Yes (`OWNER` role) |
 | `GET` | `/transactions/{id}` | View a transaction (sender or receiver only) | Yes |
 | `GET` | `/transactions` | List all transactions involving the authenticated user (paginated) | Yes |
@@ -40,9 +41,9 @@ A REST API for transferring funds between accounts, built with Spring Boot and J
 POST /accounts
 Content-Type: application/json
 
-{ "owner": "sarah1", "balance": 1000.00 }
+{ "owner": "sarah1", "password": "abc123", "balance": 1000.00 }
 ```
-→ `201 Created`, with a `Location` header pointing to the new account.
+→ `201 Created`, with a `Location` header pointing to the new account. This also registers `sarah1`/`abc123` as a login user, so the account can immediately authenticate on other endpoints.
 
 ### Example: create a transfer
 
@@ -70,6 +71,6 @@ Authorization: Basic <credentials>
 ## Known Limitations / Future Improvements
 
 - **In-memory H2 database** — data resets on every restart. A production version would use a persistent database (e.g. PostgreSQL or Oracle).
-- **Hardcoded authentication users** — login credentials are defined in `SecurityConfig`, not backed by the database. Creating an account via `POST /accounts` does not currently create a corresponding login user.
+- **Arbitrary starting balance on account creation** — `POST /accounts` currently accepts any starting balance the client provides, for demo/testing convenience. A production system would start every account at zero and require balance to come from a verified funding action.
 - **No concurrency protection** — two simultaneous transfers from the same account could both pass the balance check before either commits. Optimistic locking (`@Version`) would close this gap.
 - **HTTP Basic Auth**, not token-based (JWT) authentication.
