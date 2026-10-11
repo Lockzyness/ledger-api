@@ -172,17 +172,29 @@ class WealthtechLedgerApplicationTests {
 	@Test @DirtiesContext
 	void shouldCreateAnAccount(){
 		// Account savedJie = accountRepository.save(new Account("Jie", new BigDecimal("100")));  cause fail: saved first so each time when it looks in repo it will find it eventhough just created
-		NewAccountRequest newAccountRequest = new NewAccountRequest("Jie", new BigDecimal("100"));
+		NewAccountRequest newAccountRequest = new NewAccountRequest("jie", "jie123", new BigDecimal("100"));
 		ResponseEntity<Void> createResponse = restTemplate.postForEntity("/accounts", newAccountRequest ,Void.class);
-
 		assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
-		// new account doesnt exists in security config so it cant get for entity
-		// account creation and authentication are currently separate systems;
-		// a production version would back authentication with the same database
-		/*URI locationOfNewTranscation = createResponse.getHeaders().getLocation();
-		ResponseEntity<String> getRespone = restTemplate.getForEntity("Jie")
-		DocumentContext documentContext = JsonPath.parse();
-		assertThat()*/
+		URI locationOfNewAccount = createResponse.getHeaders().getLocation();
+		ResponseEntity<String> getRespone = restTemplate.withBasicAuth(newAccountRequest.owner(),
+				newAccountRequest.password()).getForEntity(locationOfNewAccount, String.class);
+		assertThat(getRespone.getStatusCode()).isEqualTo(HttpStatus.OK);
+		DocumentContext documentContext = JsonPath.parse(getRespone.getBody());
+		String owner = documentContext.read("$.owner");
+		assertThat(owner).isNotNull();
+
 	}
+
+	/*@Test
+	void shouldDepositIntoAccount(){
+		Account savedAccount = accountRepository.save(new Account("sarah1", new BigDecimal("100")));
+
+		AmountRequest depositAmount = new AmountRequest(new BigDecimal("100"));
+		Account addDeposit = savedAccount.setBalance(savedAccount.getBalance().add(new BigDecimal("100")));
+
+		accountRepository.save(depositSarah);
+
+	}*/
+
 }

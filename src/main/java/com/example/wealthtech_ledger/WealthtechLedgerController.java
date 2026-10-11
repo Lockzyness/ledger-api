@@ -31,7 +31,8 @@ class WealthtechLedgerController {
     @GetMapping("/{requestedId}")
     public ResponseEntity<Transaction> findById(@PathVariable Long requestedId, Principal principal){
 
-        Optional<Transaction> transactionOptional = transactionRepository.findByIdAndFromAccountOwnerOrToAccountOwner(requestedId, principal.getName(), principal.getName());
+        Optional<Transaction> transactionOptional = transactionRepository.findByIdAndFromAccountOwnerOrToAccountOwner
+                (requestedId, principal.getName(), principal.getName());
         if (transactionOptional.isPresent()){
             return ResponseEntity.ok(transactionOptional.get());
         }
@@ -62,10 +63,15 @@ class WealthtechLedgerController {
 
 
     @PostMapping
-    private ResponseEntity<Void> createTransaction(@RequestBody NewTransactionRequest newTransactionRequest, UriComponentsBuilder ucb, Principal principal){
+    public ResponseEntity<Void> createTransaction(@RequestBody NewTransactionRequest newTransactionRequest, UriComponentsBuilder ucb, Principal principal){
 
         Account fromAccount = accountRepository.findById(newTransactionRequest.fromAccountId())
                 .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,"From account not found."));
+
+        if (!fromAccount.getOwner().equals(principal.getName())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not own this account.");
+        }
+
         Account toAccount = accountRepository.findById(newTransactionRequest.toAccountId())
                 .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,"To account not found."));
 

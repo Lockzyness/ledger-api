@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -30,7 +31,7 @@ class SecurityConfig {
     }
 
     @Bean
-    UserDetailsService testOnlyUsers(PasswordEncoder passwordEncoder){
+    UserDetailsManager testOnlyUsers(PasswordEncoder passwordEncoder){
         User.UserBuilder users = User.builder();
         UserDetails sarah = users
                 .username("sarah1")
