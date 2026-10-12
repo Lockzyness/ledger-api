@@ -1,4 +1,4 @@
-package com.example.wealthtech_ledger;
+package io.github.lockzyness.ledger;
 
 import java.math.BigDecimal;
 

@@ -1,10 +1,8 @@
-package com.example.wealthtech_ledger;
+package io.github.lockzyness.ledger;
 
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import net.minidev.json.JSONArray;
-import org.apache.coyote.Response;
-import org.json.JSONString;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.TestRestTemplate;
@@ -14,7 +12,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.web.bind.annotation.PostMapping;
 
 import java.math.BigDecimal;
 import java.net.URI;
@@ -24,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureTestRestTemplate
 //@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-class WealthtechLedgerApplicationTests {
+class LedgerIntegrationTests {
 
 	@Autowired
 	TestRestTemplate restTemplate;

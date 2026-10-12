@@ -1,6 +1,5 @@
-package com.example.wealthtech_ledger;
+package io.github.lockzyness.ledger;
 
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.User;
@@ -11,10 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.math.BigDecimal;
 import java.net.URI;
 import java.security.Principal;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/accounts")

@@ -1,6 +1,5 @@
-package com.example.wealthtech_ledger;
+package io.github.lockzyness.ledger;
 
-import org.apache.coyote.Response;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -14,16 +13,15 @@ import java.net.URI;
 import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
-import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/transactions")
-class WealthtechLedgerController {
+class TransactionController {
 
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
 
-    private WealthtechLedgerController(AccountRepository accountRepository, TransactionRepository transactionRepository) {
+    private TransactionController(AccountRepository accountRepository, TransactionRepository transactionRepository) {
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
     }

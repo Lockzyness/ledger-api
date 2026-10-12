@@ -1,4 +1,4 @@
-# WealthTech Ledger
+# Ledger API
 
 A REST API for transferring funds between accounts, built with Spring Boot and JPA. Supports account creation, balance-validated transfers, and ownership-based access control — fully tested and deployed.
 
