@@ -29,8 +29,7 @@ class TransactionController {
     @GetMapping("/{requestedId}")
     public ResponseEntity<Transaction> findById(@PathVariable Long requestedId, Principal principal){
 
-        Optional<Transaction> transactionOptional = transactionRepository.findByIdAndFromAccountOwnerOrToAccountOwner
-                (requestedId, principal.getName(), principal.getName());
+        Optional<Transaction> transactionOptional = transactionRepository.findByIdForOwner(requestedId, principal.getName());
         if (transactionOptional.isPresent()){
             return ResponseEntity.ok(transactionOptional.get());
         }

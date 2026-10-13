@@ -134,6 +134,23 @@ class LedgerIntegrationTests {
 	}
 
 	@Test
+	void recipientCanViewTransactionSentToThem(){
+		// transaction 103: john (account 2) -> kumar2 (account 3)
+		ResponseEntity<String> response = restTemplate.withBasicAuth("kumar2", "qwe").getForEntity("/transactions/103", String.class);
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+		Number id = JsonPath.parse(response.getBody()).read("$.id");
+		assertThat(id).isEqualTo(103);
+	}
+
+	@Test
+	void recipientCannotViewOtherPeoplesTransactions(){
+		// kumar2 receives transaction 103, but is not a party to 99 (sarah1 -> john)
+		ResponseEntity<String> response = restTemplate.withBasicAuth("kumar2", "qwe").getForEntity("/transactions/99", String.class);
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+	}
+
+	@Test
 	@DirtiesContext
 	void shouldDeleteAExistingTransaction(){
 		ResponseEntity<Void> response = restTemplate.withBasicAuth("sarah1", "abc123").exchange("/transactions/99", HttpMethod.DELETE, null, void.class);
