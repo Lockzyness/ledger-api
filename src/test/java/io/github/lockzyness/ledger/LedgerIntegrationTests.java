@@ -112,7 +112,9 @@ class LedgerIntegrationTests {
 
 	@Test
 	void shouldNotReturnTransactionWhenCredentialsBad(){
-		ResponseEntity<String> response = restTemplate.withBasicAuth("bad1", "abc123").getForEntity("/transactions/99", String.class);
+		ResponseEntity<String> response = restTemplate
+				.withBasicAuth("bad1", "abc123")
+				.getForEntity("/transactions/99", String.class);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
 
 		response = restTemplate.withBasicAuth("sarah1", "badpass").getForEntity("/transasctions/99", String.class);
@@ -162,9 +164,11 @@ class LedgerIntegrationTests {
 
 	@Test
 	void shouldNotDeleteTransactionThatDoesntExist(){
-		ResponseEntity<Void> deleteResponse = restTemplate.withBasicAuth("sarah1", "abc123").exchange("/transactions/9999", HttpMethod.DELETE, null, Void.class);
+		ResponseEntity<Void> deleteResponse = restTemplate.withBasicAuth("sarah1", "abc123")
+				.exchange("/transactions/9999", HttpMethod.DELETE, null, Void.class);
 
-		ResponseEntity<String> getResponse = restTemplate.withBasicAuth("sarah1", "abc123").getForEntity("/transactions/9999", String.class);
+		ResponseEntity<String> getResponse = restTemplate.withBasicAuth("sarah1", "abc123")
+				.getForEntity("/transactions/9999", String.class);
 		assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 	}
 
@@ -200,15 +204,51 @@ class LedgerIntegrationTests {
 
 	}
 
-	/*@Test
-	void shouldDepositIntoAccount(){
-		Account savedAccount = accountRepository.save(new Account("sarah1", new BigDecimal("100")));
+	@Test @DirtiesContext
+	void shouldNotTransferNegative(){
+		NewTransactionRequest neg = new NewTransactionRequest("negative", new BigDecimal("-100"), 1L, 3L);
+		ResponseEntity<Void> createResponse = restTemplate
+				.withBasicAuth("sarah1" , "abc123")
+				.postForEntity("/transactions", neg ,Void.class);
+		assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
 
-		AmountRequest depositAmount = new AmountRequest(new BigDecimal("100"));
-		Account addDeposit = savedAccount.setBalance(savedAccount.getBalance().add(new BigDecimal("100")));
+		ResponseEntity<String> getResponse = restTemplate
+				.withBasicAuth("sarah1", "abc123")
+				.getForEntity("/accounts/1", String.class);
+		Number balance = JsonPath.parse(getResponse.getBody()).read("$.balance");
+		assertThat(new BigDecimal(balance.toString())).isEqualByComparingTo("1000.00");
+	}
 
-		accountRepository.save(depositSarah);
+	@Test @DirtiesContext
+	void shouldRejectZeroAmount(){
+		NewTransactionRequest emp = new NewTransactionRequest("empty", new BigDecimal("0"), 1L, 2L);
 
-	}*/
+		ResponseEntity<Void> createResponse = restTemplate
+				.withBasicAuth("sarah1" , "abc123")
+				.postForEntity("/transactions", emp ,Void.class);
+		assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+
+		ResponseEntity<String> getResponse = restTemplate
+				.withBasicAuth("sarah1", "abc123")
+				.getForEntity("/accounts/1", String.class);
+		Number balance = JsonPath.parse(getResponse.getBody()).read("$.balance");
+		assertThat(new BigDecimal(balance.toString())).isEqualByComparingTo("1000.00");
+	}
+
+	@Test @DirtiesContext
+	void shouldRejectTransferToOwnAccount(){
+		NewTransactionRequest own = new NewTransactionRequest("own",
+				new BigDecimal("100"), 1L, 1L);
+		ResponseEntity<Void> createResponse = restTemplate
+				.withBasicAuth("sarah1" , "abc123")
+				.postForEntity("/transactions", own ,Void.class);
+		assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+
+		ResponseEntity<String> getResponse = restTemplate
+				.withBasicAuth("sarah1", "abc123")
+				.getForEntity("/accounts/1", String.class);
+		Number balance = JsonPath.parse(getResponse.getBody()).read("$.balance");
+		assertThat(new BigDecimal(balance.toString())).isEqualByComparingTo("1000.00");
+	}
 
 }

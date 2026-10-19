@@ -9,6 +9,8 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import org.springframework.data.domain.Pageable;
+
+import java.math.BigDecimal;
 import java.net.URI;
 import java.security.Principal;
 import java.util.List;
@@ -72,9 +74,21 @@ class TransactionController {
         Account toAccount = accountRepository.findById(newTransactionRequest.toAccountId())
                 .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,"To account not found."));
 
+        if (newTransactionRequest.amount() == null ){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Amount is required");
+        }
+
+        if (newTransactionRequest.amount().compareTo(BigDecimal.ZERO) <= 0){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot be negative or zero");
+        }
         if (newTransactionRequest.amount().compareTo(fromAccount.getBalance()) > 0){
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Insufficient funds");
         }
+
+        if (newTransactionRequest.fromAccountId().equals(newTransactionRequest.toAccountId())){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot transfer to yourself! ");
+        }
+
         fromAccount.setBalance(fromAccount.getBalance().subtract(newTransactionRequest.amount()));
         toAccount.setBalance(toAccount.getBalance().add(newTransactionRequest.amount()));
         Transaction t = new Transaction(newTransactionRequest.description(), newTransactionRequest.amount(), fromAccount, toAccount);
