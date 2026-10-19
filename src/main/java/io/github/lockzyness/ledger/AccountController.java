@@ -1,5 +1,6 @@
 package io.github.lockzyness.ledger;
 
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.User;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.math.BigDecimal;
 import java.net.URI;
 import java.security.Principal;
 
@@ -27,11 +29,12 @@ public class AccountController {
     }
 
     @PostMapping
-    public ResponseEntity<Void> createAccount(@RequestBody NewAccountRequest newAccountRequest, UriComponentsBuilder ucb){
-        if(accountRepository.existsByOwner((newAccountRequest.owner()))){
-            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Account already exists.");
+    public ResponseEntity<Void> createAccount(@Valid @RequestBody NewAccountRequest newAccountRequest, UriComponentsBuilder ucb){
+        if(accountRepository.existsByOwner(newAccountRequest.owner())
+                || userDetailsManager.userExists(newAccountRequest.owner())){
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Username already taken.");
         }
-        Account newAcc = new Account(newAccountRequest.owner(), newAccountRequest.balance());
+        Account newAcc = new Account(newAccountRequest.owner(), new BigDecimal("0"));
         Account savedAccount = accountRepository.save(newAcc);
 
         UserDetails newUser = User.builder()

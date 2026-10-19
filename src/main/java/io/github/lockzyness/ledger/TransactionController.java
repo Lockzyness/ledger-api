@@ -1,16 +1,15 @@
 package io.github.lockzyness.ledger;
 
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import org.springframework.data.domain.Pageable;
-
-import java.math.BigDecimal;
 import java.net.URI;
 import java.security.Principal;
 import java.util.List;
@@ -62,7 +61,7 @@ class TransactionController {
 
 
     @PostMapping
-    public ResponseEntity<Void> createTransaction(@RequestBody NewTransactionRequest newTransactionRequest, UriComponentsBuilder ucb, Principal principal){
+    public ResponseEntity<Void> createTransaction(@Valid @RequestBody NewTransactionRequest newTransactionRequest, UriComponentsBuilder ucb, Principal principal){
 
         Account fromAccount = accountRepository.findById(newTransactionRequest.fromAccountId())
                 .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,"From account not found."));
@@ -71,22 +70,15 @@ class TransactionController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not own this account.");
         }
 
+        if (newTransactionRequest.fromAccountId().equals(newTransactionRequest.toAccountId())){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot transfer to same account. ");
+        }
+
         Account toAccount = accountRepository.findById(newTransactionRequest.toAccountId())
                 .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND,"To account not found."));
 
-        if (newTransactionRequest.amount() == null ){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Amount is required");
-        }
-
-        if (newTransactionRequest.amount().compareTo(BigDecimal.ZERO) <= 0){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot be negative or zero");
-        }
         if (newTransactionRequest.amount().compareTo(fromAccount.getBalance()) > 0){
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_CONTENT, "Insufficient funds");
-        }
-
-        if (newTransactionRequest.fromAccountId().equals(newTransactionRequest.toAccountId())){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot transfer to yourself! ");
         }
 
         fromAccount.setBalance(fromAccount.getBalance().subtract(newTransactionRequest.amount()));

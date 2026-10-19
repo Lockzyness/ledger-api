@@ -1,8 +1,8 @@
 package io.github.lockzyness.ledger;
 
-import java.math.BigDecimal;
+import jakarta.validation.constraints.NotBlank;
 
-public record NewAccountRequest (String owner, String password, BigDecimal balance){
+public record NewAccountRequest (@NotBlank String owner, @NotBlank String password){
 
 }
 

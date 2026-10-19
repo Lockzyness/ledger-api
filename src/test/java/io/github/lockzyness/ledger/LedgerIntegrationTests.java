@@ -189,8 +189,7 @@ class LedgerIntegrationTests {
 
 	@Test @DirtiesContext
 	void shouldCreateAnAccount(){
-		// Account savedJie = accountRepository.save(new Account("Jie", new BigDecimal("100")));  cause fail: saved first so each time when it looks in repo it will find it eventhough just created
-		NewAccountRequest newAccountRequest = new NewAccountRequest("jie", "jie123", new BigDecimal("100"));
+		NewAccountRequest newAccountRequest = new NewAccountRequest("jie", "jie123");
 		ResponseEntity<Void> createResponse = restTemplate.postForEntity("/accounts", newAccountRequest ,Void.class);
 		assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
@@ -200,8 +199,9 @@ class LedgerIntegrationTests {
 		assertThat(getRespone.getStatusCode()).isEqualTo(HttpStatus.OK);
 		DocumentContext documentContext = JsonPath.parse(getRespone.getBody());
 		String owner = documentContext.read("$.owner");
+		Number bal = documentContext.read("$.balance");
 		assertThat(owner).isNotNull();
-
+		assertThat(bal.doubleValue()).isZero();
 	}
 
 	@Test @DirtiesContext
@@ -222,6 +222,22 @@ class LedgerIntegrationTests {
 	@Test @DirtiesContext
 	void shouldRejectZeroAmount(){
 		NewTransactionRequest emp = new NewTransactionRequest("empty", new BigDecimal("0"), 1L, 2L);
+
+		ResponseEntity<Void> createResponse = restTemplate
+				.withBasicAuth("sarah1" , "abc123")
+				.postForEntity("/transactions", emp ,Void.class);
+		assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+
+		ResponseEntity<String> getResponse = restTemplate
+				.withBasicAuth("sarah1", "abc123")
+				.getForEntity("/accounts/1", String.class);
+		Number balance = JsonPath.parse(getResponse.getBody()).read("$.balance");
+		assertThat(new BigDecimal(balance.toString())).isEqualByComparingTo("1000.00");
+	}
+
+	@Test @DirtiesContext
+	void shouldRejectNullAmount(){
+		NewTransactionRequest emp = new NewTransactionRequest("empty", null, 1L, 2L);
 
 		ResponseEntity<Void> createResponse = restTemplate
 				.withBasicAuth("sarah1" , "abc123")
