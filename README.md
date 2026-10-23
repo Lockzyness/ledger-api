@@ -66,6 +66,36 @@ Authorization: Basic <credentials>
 - `404 Not Found` — either account doesn't exist
 - `422 Unprocessable Content` — the sender's balance is insufficient
 
+## Try it
+
+The live API is seeded with two demo accounts and one transaction (`Lunch`, 50.00 from account 1 to account 2). These credentials are for demo use only.
+
+| Username | Password | Account ID | Starting balance |
+|---|---|---|---|
+| `sarah1` | `abc123` | 1 | 950.00 |
+| `kumar2` | `qwe` | 2 | 550.00 |
+
+There is no login page — authenticate with HTTP Basic Auth on each request. With `curl`:
+
+```bash
+# 1. View sarah1's account
+curl -u sarah1:abc123 https://wealthtech-ledger.onrender.com/accounts/1
+
+# 2. Transfer 50.00 from account 1 to account 2 (expect 201 Created)
+curl -i -u sarah1:abc123 -X POST https://wealthtech-ledger.onrender.com/transactions \
+  -H "Content-Type: application/json" \
+  -d '{"description":"coffee","amount":50.00,"fromAccountId":1,"toAccountId":2}'
+
+# 3. Check the receiving account as kumar2 (balance should now be 600)
+curl -u kumar2:qwe https://wealthtech-ledger.onrender.com/accounts/2
+```
+
+Things to try next: a wrong password returns `401`; `sarah1` requesting `/accounts/2` returns `404` (accounts are owner-only); a transfer larger than the sender's balance returns `422`.
+
+Notes:
+- **Windows PowerShell:** use `curl.exe` (plain `curl` is an alias for a different command), put each command on one line, and escape the JSON quotes, e.g. `-d "{\"description\":\"coffee\",\"amount\":50.00,\"fromAccountId\":1,\"toAccountId\":2}"`.
+- Data is stored in memory and resets whenever the service restarts. It is also a shared demo, so balances may differ from the table above if someone else has already tried it.
+
 ## Design Decisions
 
 - **Balance validation over full double-entry accounting.** The project deliberately scopes to validating and applying single balance transfers (reject if insufficient funds, debit/credit both sides atomically) rather than modeling a full double-entry ledger with separate debit/credit entries and a chart of accounts. That's a much larger domain — the goal here was a defensible, complete piece of realistic backend logic, not a from-scratch accounting system.
