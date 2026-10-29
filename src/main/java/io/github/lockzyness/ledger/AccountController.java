@@ -50,11 +50,8 @@ public class AccountController {
 
     @GetMapping("/{requestedId}")
     public ResponseEntity<Account> getAccount(@PathVariable Long requestedId, Principal principal){
-        //Optional<Account> accountOptional = accountRepository.findByIdAndOwner(requestedId, principal.getName());
-        // why no need optional now?
         Account account = accountRepository.findByIdAndOwner(requestedId, principal.getName());
 
-        // how will it return null auto?
         if(account == null){
             return ResponseEntity.notFound().build();
         }

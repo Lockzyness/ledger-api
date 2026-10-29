@@ -121,7 +121,7 @@ class LedgerIntegrationTests {
 				.getForEntity("/transactions/99", String.class);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
 
-		response = restTemplate.withBasicAuth("sarah1", "badpass").getForEntity("/transasctions/99", String.class);
+		response = restTemplate.withBasicAuth("sarah1", "badpass").getForEntity("/transactions/99", String.class);
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
 	}
 
