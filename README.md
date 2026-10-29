@@ -13,7 +13,7 @@ A REST API for transferring funds between accounts, built with Spring Boot and J
 - **H2** (in-memory database)
 - **Gradle**
 - **Docker** (multi-stage build, deployed on Render)
-- **JUnit 5** + `TestRestTemplate` (integration tests)
+- **JUnit** + `TestRestTemplate` (integration tests)
 
 ## Features
 
@@ -23,7 +23,7 @@ A REST API for transferring funds between accounts, built with Spring Boot and J
 - **Input validation** — request bodies are validated with Jakarta Bean Validation (transfer amount required and positive, account IDs required, username and password required); transfers to the same account are also rejected. Invalid requests return `400 Bad Request`
 - **Ownership-based access control** — a transaction is only visible to the sender or receiver, never a third party
 - **Role-based authorization** — only users with the `OWNER` role can create or view transactions
-- **Full test coverage** of the success and rejection paths for fund transfers, plus access-control edge cases
+- **Integration tests** covering successful and rejected transfers, input validation, and access-control edge cases
 
 ## API Endpoints
 
@@ -100,7 +100,7 @@ Notes:
 
 - **Balance validation over full double-entry accounting.** The project deliberately scopes to validating and applying single balance transfers (reject if insufficient funds, debit/credit both sides atomically) rather than modeling a full double-entry ledger with separate debit/credit entries and a chart of accounts. That's a much larger domain — the goal here was a defensible, complete piece of realistic backend logic, not a from-scratch accounting system.
 - **Unidirectional JPA relationships.** `Transaction` holds `@ManyToOne` references to `Account` (`fromAccount`/`toAccount`), with no back-reference from `Account` to its transactions. This keeps the model simpler; the relationship is fully functional without it, and a back-reference can be added later if needed.
-- **Ownership-based access control lives in the query layer.** Rather than filtering in application code, access checks (`fromAccount.owner OR toAccount.owner`) are expressed directly in Spring Data JPA repository methods, keeping authorization logic close to the data.
+- **Ownership-based access control lives in the query layer.** Rather than filtering in application code, access checks (`fromAccount.owner OR toAccount.owner`) are expressed directly in Spring Data JPA repository methods, keeping authorization logic close to the data. Single-transaction lookups use an explicit JPQL query, because a derived method name like `findByIdAndFromAccountOwnerOrToAccountOwner` groups the conditions incorrectly (AND binds tighter than OR) and would let a user who received any transaction access others.
 - **New accounts start at zero.** Clients can't choose their own starting balance. In a real system, money would only enter through a verified funding source (e.g. a payment gateway); this project doesn't model funding, so balances change only through transfers.
 - **Business logic in the controller, not a separate service layer.** Given the project's size, keeping logic directly in the controller avoided unnecessary layering. A larger version of this project would extract a service layer.
 
@@ -110,3 +110,4 @@ Notes:
 - **No funding mechanism** — accounts start at zero and there is no deposit/top-up endpoint yet, so money can only move between accounts that already hold a balance.
 - **No concurrency protection** — two simultaneous transfers from the same account could both pass the balance check before either commits. Optimistic locking (`@Version`) would close this gap.
 - **HTTP Basic Auth**, not token-based (JWT) authentication.
+- **Deleting a transaction doesn't reverse balances** — deletion removes the record only. A real ledger would forbid deletion and record a reversing transaction instead.
