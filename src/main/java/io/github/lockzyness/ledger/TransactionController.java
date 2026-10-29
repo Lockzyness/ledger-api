@@ -14,6 +14,7 @@ import java.net.URI;
 import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.transaction.annotation.Transactional;
 
 @RestController
 @RequestMapping("/transactions")
@@ -22,7 +23,7 @@ class TransactionController {
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
 
-    private TransactionController(AccountRepository accountRepository, TransactionRepository transactionRepository) {
+    public TransactionController(AccountRepository accountRepository, TransactionRepository transactionRepository) {
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
     }
@@ -48,7 +49,7 @@ class TransactionController {
     }
 
     @GetMapping             // return list
-    private ResponseEntity<List<Transaction>> findAll(Pageable pageable, Principal principal){
+    public ResponseEntity<List<Transaction>> findAll(Pageable pageable, Principal principal){
         Page<Transaction> page = transactionRepository
                 .findByFromAccountOwnerOrToAccountOwner(principal.getName(), principal.getName(),
                 PageRequest.of(
@@ -60,7 +61,7 @@ class TransactionController {
     }
 
 
-    @PostMapping
+    @PostMapping @Transactional
     public ResponseEntity<Void> createTransaction(@Valid @RequestBody NewTransactionRequest newTransactionRequest, UriComponentsBuilder ucb, Principal principal){
 
         Account fromAccount = accountRepository.findById(newTransactionRequest.fromAccountId())
@@ -90,7 +91,7 @@ class TransactionController {
     }
 
     @DeleteMapping("/{id}")
-    private ResponseEntity<Void> deleteTransaction(@PathVariable Long id, Principal principal){
+    public ResponseEntity<Void> deleteTransaction(@PathVariable Long id, Principal principal){
 
         if(!transactionRepository.existsByIdAndFromAccount_OwnerOrToAccount_Owner(id, principal.getName(), principal.getName())){
             return ResponseEntity.notFound().build();

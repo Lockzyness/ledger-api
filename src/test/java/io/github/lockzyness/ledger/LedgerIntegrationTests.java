@@ -64,6 +64,10 @@ class LedgerIntegrationTests {
 
 		URI locationOfNewTranscation = createResponse.getHeaders().getLocation();
 		ResponseEntity<String> getResponse = restTemplate.withBasicAuth("sarah1", "abc123").getForEntity(locationOfNewTranscation, String.class);
+		Account updatedSarah = accountRepository.findById(savedSarah.getId()).orElseThrow();
+		Account updatedJohn = accountRepository.findById(savedJohn.getId()).orElseThrow();
+		assertThat(updatedSarah.getBalance()).isEqualByComparingTo("900.00");
+		assertThat(updatedJohn.getBalance()).isEqualByComparingTo("300.00");
 		assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
 		DocumentContext documentContext = JsonPath.parse(getResponse.getBody());
 		Number amt = documentContext.read("$.amount");
