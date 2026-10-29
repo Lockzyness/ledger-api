@@ -93,7 +93,7 @@ class TransactionController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTransaction(@PathVariable Long id, Principal principal){
 
-        if(!transactionRepository.existsByIdAndFromAccount_OwnerOrToAccount_Owner(id, principal.getName(), principal.getName())){
+        if (transactionRepository.findByIdForOwner(id, principal.getName()).isEmpty()) {
             return ResponseEntity.notFound().build();
         }
 
