@@ -1,6 +1,5 @@
 package io.github.lockzyness.ledger;
 
-/*import org.hibernate.query.Page;*/ //  wrong page
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;

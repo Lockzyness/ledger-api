@@ -38,14 +38,6 @@ class TransactionController {
         else {
             return ResponseEntity.notFound().build();
         }
-
-        /*if (requestedId.equals(99L)){           replace hardcoded with .findById
-            Transaction transaction = new Transaction(99L, "test get map", new BigDecimal("100"));
-            return ResponseEntity.ok(transaction);
-        }
-        else {
-            return ResponseEntity.notFound().build();
-        }*/
     }
 
     @GetMapping             // return list
@@ -99,12 +91,5 @@ class TransactionController {
 
         transactionRepository.deleteById(id);
         return ResponseEntity.noContent().build();
-
-        // equivalent if dont want ! operator. return will terminate the code.
-        /*if (cashCardRepository.existsByIdAndOwner(id, principal.getName())) {
-            cashCardRepository.deleteById(id);
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();*/
     }
 }
